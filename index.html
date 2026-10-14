@@ -1,0 +1,480 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Interactive 3D Golden Medal</title>
+
+  <meta name="description" content="Interactive 3D golden medal with celebration music and confetti">
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <!-- Mouse and Touch Rotation -->
+  <script>
+    AFRAME.registerComponent('mouse-rotate', {
+      schema: {
+        speed: { type: 'number', default: 0.5 }
+      },
+
+      init: function () {
+        this.dragging = false;
+        this.x = 0;
+        this.y = 0;
+
+        this.onDown = this.onDown.bind(this);
+        this.onUp = this.onUp.bind(this);
+        this.onMove = this.onMove.bind(this);
+
+        this.el.sceneEl.addEventListener('mousedown', this.onDown);
+        window.addEventListener('mouseup', this.onUp);
+        window.addEventListener('mousemove', this.onMove);
+
+        this.el.sceneEl.addEventListener('touchstart', this.onDown);
+        window.addEventListener('touchend', this.onUp);
+        window.addEventListener('touchmove', this.onMove);
+      },
+
+      onDown: function (event) {
+        this.dragging = true;
+
+        const point = event.touches
+          ? event.touches[0]
+          : event;
+
+        this.x = point.clientX;
+        this.y = point.clientY;
+      },
+
+      onUp: function () {
+        this.dragging = false;
+      },
+
+      onMove: function (event) {
+        if (!this.dragging) return;
+
+        const point = event.touches
+          ? event.touches[0]
+          : event;
+
+        const dx = point.clientX - this.x;
+        const dy = point.clientY - this.y;
+
+        this.x = point.clientX;
+        this.y = point.clientY;
+
+        const rotation = this.el.getAttribute('rotation');
+
+        this.el.setAttribute('rotation', {
+          x: rotation.x - dy * this.data.speed,
+          y: rotation.y + dx * this.data.speed,
+          z: rotation.z
+        });
+      },
+
+      remove: function () {
+        this.el.sceneEl.removeEventListener('mousedown', this.onDown);
+        window.removeEventListener('mouseup', this.onUp);
+        window.removeEventListener('mousemove', this.onMove);
+
+        this.el.sceneEl.removeEventListener('touchstart', this.onDown);
+        window.removeEventListener('touchend', this.onUp);
+        window.removeEventListener('touchmove', this.onMove);
+      }
+    });
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    #ui-overlay {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      width: 90%;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .party-btn {
+      pointer-events: auto;
+      background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
+      color: #111;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.45);
+      transition: transform 0.2s;
+    }
+
+    .party-btn:hover {
+      transform: scale(1.06);
+    }
+
+    .hint-text {
+      display: table;
+      margin: 10px auto 0;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      border-radius: 15px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #FFD700;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    #music-status {
+      color: #fff1a8;
+      font-size: 13px;
+      margin-top: 8px;
+      text-shadow: 0 0 8px #FFD700;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Celebration Music -->
+  <audio
+    id="celebration-music"
+    src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    preload="auto"
+    loop>
+  </audio>
+
+  <!-- UI -->
+  <div id="ui-overlay">
+    <button class="party-btn" onclick="triggerPartyPopper()">
+      🎉 Congratulation buddy 🎉
+    </button>
+
+    <div class="hint-text">
+      You've secured a Golden Medal for overall performance!
+    </div>
+
+    <div id="music-status">
+      Press B to play celebration music | C for confetti
+    </div>
+  </div>
+
+  <!-- A-FRAME SCENE -->
+  <a-scene
+    background="color: #000000"
+    renderer="colorManagement: true">
+
+    <a-assets>
+      <img
+        id="star-icon"
+        src="https://cdn.glitch.global/206f632d-cf41-477d-9477-7422b404d59a/star.png?v=1675862657805"
+        crossorigin="anonymous">
+    </a-assets>
+
+    <!-- Lighting -->
+    <a-light
+      type="ambient"
+      color="#FFF8DC"
+      intensity="0.8">
+    </a-light>
+
+    <a-light
+      type="directional"
+      color="#FFF4B0"
+      intensity="3"
+      position="0 4 3">
+    </a-light>
+
+    <a-light
+      type="directional"
+      color="#FFFFFF"
+      intensity="2"
+      position="0 2 5">
+    </a-light>
+
+    <a-light
+      type="point"
+      color="#FFD700"
+      intensity="2"
+      position="-3 2 2">
+    </a-light>
+
+    <a-light
+      type="point"
+      color="#FFE680"
+      intensity="2"
+      position="3 2 2">
+    </a-light>
+
+    <!-- Camera -->
+    <a-entity position="0 1.6 4.5">
+      <a-camera
+        look-controls="enabled: false"
+        wasd-controls="enabled: false">
+      </a-camera>
+    </a-entity>
+
+    <!-- MEDAL GROUP -->
+    <a-entity
+      id="medal-group"
+      position="0 1.6 0"
+      scale="2.2 2.2 2.2"
+      mouse-rotate="speed: 0.5">
+
+      <!-- Blue Ribbon -->
+      <a-triangle
+        vertex-a="0 0.7 0"
+        vertex-b="-0.35 1.25 0"
+        vertex-c="0.35 1.25 0"
+        material="color: #153A7A; roughness: 0.65; metalness: 0.1; side: double">
+      </a-triangle>
+
+      <!-- Golden Ribbon Stripe -->
+      <a-plane
+        width="0.12"
+        height="0.55"
+        position="0 0.97 0.003"
+        material="color: #FFD700; metalness: 0.85; roughness: 0.25; side: double">
+      </a-plane>
+
+      <!-- Golden Medal Body -->
+      <a-cylinder
+        id="medal-disc"
+        geometry="radius: 0.65; height: 0.1; segments-radial: 64"
+        rotation="90 0 0"
+        position="0 0.25 0"
+        material="color: #FFD700; metalness: 1; roughness: 0.12">
+      </a-cylinder>
+
+      <!-- Inner Gold Ring -->
+      <a-torus
+        geometry="radius: 0.52; radius-tubular: 0.025; segments-radial: 48; segments-tubular: 16"
+        rotation="90 0 0"
+        position="0 0.25 0.055"
+        material="color: #FFF1A8; metalness: 1; roughness: 0.08">
+      </a-torus>
+
+      <!-- Star -->
+      <a-circle
+        geometry="radius: 0.38; segments: 64"
+        position="0 0.25 0.062"
+        material="src: #star-icon; transparent: true; color: #FFE066; shader: standard; metalness: 0.5; roughness: 0.2; side: double">
+      </a-circle>
+
+      <!-- Medal Text -->
+      <a-text
+        value="1st Prize"
+        color="#5C440A"
+        align="center"
+        width="2"
+        position="0 0.52 0.075">
+      </a-text>
+
+      <a-text
+        value="Award"
+        color="#5C440A"
+        align="center"
+        width="2.5"
+        position="0 0.02 0.075">
+      </a-text>
+
+      <!-- Connector Loop -->
+      <a-torus
+        geometry="radius: 0.1; radius-tubular: 0.015"
+        rotation="0 90 0"
+        position="0 0.88 0"
+        material="color: #FFD700; metalness: 1; roughness: 0.05">
+      </a-torus>
+
+      <!-- Gold Glitter -->
+      <a-entity id="gold-glitter">
+        <a-sphere radius="0.018" position="-0.72 0.55 0.08"
+          material="color: #FFF4A3; emissive: #FFD700; emissiveIntensity: 1">
+        </a-sphere>
+
+        <a-sphere radius="0.015" position="0.68 0.48 0.1"
+          material="color: #FFFFFF; emissive: #FFD700; emissiveIntensity: 1">
+        </a-sphere>
+
+        <a-sphere radius="0.022" position="-0.58 0.05 0.08"
+          material="color: #FFE066; emissive: #FFD700; emissiveIntensity: 1">
+        </a-sphere>
+
+        <a-sphere radius="0.016" position="0.63 0.02 0.08"
+          material="color: #FFFFFF; emissive: #FFD700; emissiveIntensity: 1">
+        </a-sphere>
+
+        <a-sphere radius="0.018" position="0.35 0.72 0.08"
+          material="color: #FFF4A3; emissive: #FFD700; emissiveIntensity: 1">
+        </a-sphere>
+
+        <a-sphere radius="0.014" position="-0.35 0.76 0.08"
+          material="color: #FFFFFF; emissive: #FFD700; emissiveIntensity: 1">
+        </a-sphere>
+      </a-entity>
+    </a-entity>
+
+    <!-- Black Background -->
+    <a-sky color="#000000"></a-sky>
+
+  </a-scene>
+
+  <!-- MUSIC + CONFETTI -->
+  <script>
+    const music = document.getElementById('celebration-music');
+    const musicStatus = document.getElementById('music-status');
+
+    // Press B to play or pause music.
+    // Press C to launch confetti.
+    window.addEventListener('keydown', function (event) {
+      if (event.repeat) return;
+
+      if (event.key.toLowerCase() === 'b') {
+        if (music.paused) {
+          music.play()
+            .then(() => {
+              musicStatus.textContent = '🎵 Celebration music is playing! Press B to pause.';
+            })
+            .catch(() => {
+              musicStatus.textContent = 'Music could not load. Check your internet connection or audio URL.';
+            });
+        } else {
+          music.pause();
+          musicStatus.textContent = 'Music paused. Press B to play again.';
+        }
+      }
+
+      if (event.key.toLowerCase() === 'c') {
+        triggerPartyPopper();
+      }
+    });
+
+    // Party Popper
+    function triggerPartyPopper() {
+      const scene = document.querySelector('a-scene');
+
+      const origin = {
+        x: 0,
+        y: 1.6,
+        z: 0
+      };
+
+      const colors = [
+        '#FFD700',
+        '#FF1493',
+        '#00FFFF',
+        '#FF4500',
+        '#7CFC00',
+        '#FF00FF',
+        '#FFFF00',
+        '#00FF7F'
+      ];
+
+      const particleCount = 85;
+
+      for (let i = 0; i < particleCount; i++) {
+        const confetti = document.createElement('a-plane');
+
+        const w = 0.06 + Math.random() * 0.06;
+        const h = 0.09 + Math.random() * 0.08;
+
+        const color = colors[
+          Math.floor(Math.random() * colors.length)
+        ];
+
+        confetti.setAttribute('width', w);
+        confetti.setAttribute('height', h);
+
+        confetti.setAttribute('material', {
+          color: color,
+          side: 'double',
+          emissive: color,
+          emissiveIntensity: 0.3
+        });
+
+        confetti.setAttribute('position', {
+          x: origin.x,
+          y: origin.y,
+          z: origin.z + 0.2
+        });
+
+        confetti.setAttribute('rotation', {
+          x: Math.random() * 360,
+          y: Math.random() * 360,
+          z: Math.random() * 360
+        });
+
+        scene.appendChild(confetti);
+
+        const vx = (Math.random() - 0.5) * 5;
+        const vy = Math.random() * 4.5 + 2.5;
+        const vz = (Math.random() - 0.5) * 3.5 + 1;
+
+        let posX = origin.x;
+        let posY = origin.y;
+        let posZ = origin.z + 0.2;
+        let curVy = vy;
+
+        const startTime = performance.now();
+        const duration = 2500;
+
+        function animateConfetti(now) {
+          const elapsed = now - startTime;
+
+          if (elapsed >= duration) {
+            confetti.remove();
+            return;
+          }
+
+          const dt = 0.016;
+
+          posX += vx * dt;
+          curVy -= 5.5 * dt;
+          posY += curVy * dt;
+          posZ += vz * dt;
+
+          confetti.setAttribute('position', {
+            x: posX,
+            y: posY,
+            z: posZ
+          });
+
+          confetti.setAttribute('rotation', {
+            x: elapsed * 0.7,
+            y: elapsed * 1.1,
+            z: elapsed * 0.5
+          });
+
+          if (elapsed > duration - 600) {
+            const scale = Math.max(
+              0,
+              (duration - elapsed) / 600
+            );
+
+            confetti.setAttribute('scale', {
+              x: scale,
+              y: scale,
+              z: scale
+            });
+          }
+
+          requestAnimationFrame(animateConfetti);
+        }
+
+        requestAnimationFrame(animateConfetti);
+      }
+    }
+  </script>
+
+</body>
+</html>
